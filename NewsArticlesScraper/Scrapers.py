@@ -138,6 +138,8 @@ class NYTSpider(scrapy.Spider):
 
     def __init__(self, from_time, until_time, api_key, **kwargs):
         self.api_key = api_key
+        from_time = datetime.datetime.fromtimestamp(from_time)
+        until_time = datetime.datetime.fromtimestamp(until_time)
         self.from_time = gmt_timezone.localize(from_time).astimezone(et_timezone).timestamp()
         self.until_time = gmt_timezone.localize(until_time).astimezone(et_timezone).timestamp()
         if time.time() - self.until_time <= 86400:
@@ -197,7 +199,8 @@ class NYTSpider(scrapy.Spider):
         author_name = response.css(".last-byline ::text").get()
         if author_name is not None:
             author_name = re.sub("[Bb]y.", "", author_name)
-        time_ = et_timezone.localize(response.meta["time"]).astimezone(gmt_timezone).timestamp()
+        datetime_object = datetime.datetime.fromtimestamp(response.meta["time"])
+        time_ = et_timezone.localize(datetime_object).astimezone(gmt_timezone).timestamp()
         yield {
             "title": response.css("div h1 ::text").get(),
             "author_name": author_name,

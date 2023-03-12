@@ -1,3 +1,4 @@
+import pytz
 import scrapy
 import datetime
 import ciso8601
@@ -134,7 +135,7 @@ class NYTSpider(scrapy.Spider):
         self.api_key = api_key
         self.from_time = from_time
         self.until_time = until_time
-        if (datetime.datetime.now() - self.until_time).total_seconds() <= 86400:
+        if (datetime.datetime.now(pytz.timezone("GMT")) - self.until_time).total_seconds() <= 86400:
             self.recent = True
         else:
             self.recent = False

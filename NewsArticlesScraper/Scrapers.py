@@ -1,10 +1,8 @@
 import scrapy
 import datetime
 import ciso8601
-import time
 import re
 import logging
-import pytz
 
 
 class CNBCSpider(scrapy.Spider):
@@ -25,7 +23,7 @@ class CNBCSpider(scrapy.Spider):
         'REQUEST_FINGERPRINTER_IMPLEMENTATION': '2.7',
     }
 
-    def __init__(self, from_time, until_time, **kwargs):
+    def __init__(self, from_time: datetime.datetime, until_time: datetime.datetime, **kwargs):
         self.url_stream = "https://api.queryly.com/cnbc/json.aspx?queryly_key=31a35d40a9a64ab3&query=cnbc&endindex={" \
                           "}&batchsize=100&timezoneoffset=-60&sort=date"
         self.from_time = from_time
@@ -50,9 +48,9 @@ class CNBCSpider(scrapy.Spider):
         data = response.json()
         current_page = data["metadata"]["pagerequested"]
         if current_page != 1:
-            newest_date = time.mktime(ciso8601.parse_datetime(data["results"][0]["datePublished"]).timetuple())
-            oldest_date = time.mktime(ciso8601.parse_datetime(data["results"][-1]["datePublished"]).timetuple())
-            if newest_date <= self.from_time:  # from = 3000 newest = 3050 oldest = 2950
+            newest_date = ciso8601.parse_datetime(data["results"][0]["datePublished"])
+            oldest_date = ciso8601.parse_datetime(data["results"][-1]["datePublished"])
+            if newest_date <= self.from_time:
                 middle = round((current_page + self.end_page) / 2)
                 self.start_page = current_page
                 yield scrapy.Request(self.url_stream.format((middle - 1) * 100) + "&x=1",
@@ -84,7 +82,7 @@ class CNBCSpider(scrapy.Spider):
             logging.error(f"Current page not found when requesting {response.url}.")
 
         for result in data["results"]:
-            t = time.mktime(ciso8601.parse_datetime(result["datePublished"]).timetuple())
+            t = ciso8601.parse_datetime(result["datePublished"])
             if self.from_time < t < self.until_time:
                 premium = False
                 if "cn:contentClassification" in result:
@@ -115,10 +113,6 @@ class CNBCSpider(scrapy.Spider):
         }
 
 
-gmt_timezone = pytz.timezone("GMT")
-et_timezone = pytz.timezone("US/Eastern")
-
-
 class NYTSpider(scrapy.Spider):
     """Spider to scrape NYT articles.
 
@@ -136,13 +130,11 @@ class NYTSpider(scrapy.Spider):
         'DOWNLOAD_TIMEOUT': 300,
     }
 
-    def __init__(self, from_time, until_time, api_key, **kwargs):
+    def __init__(self, from_time: datetime.datetime, until_time: datetime.datetime, api_key, **kwargs):
         self.api_key = api_key
-        from_time = datetime.datetime.fromtimestamp(from_time)
-        until_time = datetime.datetime.fromtimestamp(until_time)
-        self.from_time = gmt_timezone.localize(from_time).astimezone(et_timezone).timestamp()
-        self.until_time = gmt_timezone.localize(until_time).astimezone(et_timezone).timestamp()
-        if time.time() - self.until_time <= 86400:
+        self.from_time = from_time
+        self.until_time = until_time
+        if (datetime.datetime.now() - self.until_time).total_seconds() <= 86400:
             self.recent = True
         else:
             self.recent = False
@@ -150,10 +142,9 @@ class NYTSpider(scrapy.Spider):
 
     def start_requests(self):
         url_api_historic = "https://api.nytimes.com/svc/archive/v1/{}/{}.json?api-key=" + self.api_key
-        year_min = int(datetime.datetime.fromtimestamp(self.from_time).strftime('%Y'))
-        date_max = datetime.datetime.fromtimestamp(self.until_time)
-        year_max = int(date_max.strftime('%Y'))
-        month_max = int(date_max.strftime('%m'))
+        year_min = int(self.from_time.strftime('%Y'))
+        year_max = int(self.until_time.strftime('%Y'))
+        month_max = int(self.until_time.strftime('%m'))
 
         for year in range(year_min, year_max):
             for month in range(1, 13):
@@ -179,7 +170,7 @@ class NYTSpider(scrapy.Spider):
                 pub_date = article["pub_date"]
             else:
                 pub_date = article["published_date"]
-            pub_date = time.mktime(ciso8601.parse_datetime(pub_date).timetuple())
+            pub_date = ciso8601.parse_datetime(pub_date)
             if pub_date < self.from_time:
                 break
             if pub_date > self.until_time:
@@ -199,13 +190,11 @@ class NYTSpider(scrapy.Spider):
         author_name = response.css(".last-byline ::text").get()
         if author_name is not None:
             author_name = re.sub("[Bb]y.", "", author_name)
-        datetime_object = datetime.datetime.fromtimestamp(response.meta["time"])
-        time_ = et_timezone.localize(datetime_object).astimezone(gmt_timezone).timestamp()
         yield {
             "title": response.css("div h1 ::text").get(),
             "author_name": author_name,
             "body": content,
-            "time": time_,
+            "time": response.meta["time"],
             "url": response.url,
             "origin": "n",
         }

@@ -4,6 +4,7 @@ import ciso8601
 import time
 import re
 import logging
+import pytz
 
 
 class CNBCSpider(scrapy.Spider):
@@ -42,8 +43,8 @@ class CNBCSpider(scrapy.Spider):
         total_pages = metadata["totalpage"]
         self.start_page = total_pages
         self.end_page = 1
-        middle = round(total_pages/2)
-        yield scrapy.Request(self.url_stream.format((middle-1)*100), callback=self.locate_start_page)
+        middle = round(total_pages / 2)
+        yield scrapy.Request(self.url_stream.format((middle - 1) * 100), callback=self.locate_start_page)
 
     def locate_start_page(self, response):
         data = response.json()
@@ -52,16 +53,17 @@ class CNBCSpider(scrapy.Spider):
             newest_date = time.mktime(ciso8601.parse_datetime(data["results"][0]["datePublished"]).timetuple())
             oldest_date = time.mktime(ciso8601.parse_datetime(data["results"][-1]["datePublished"]).timetuple())
             if newest_date <= self.from_time:  # from = 3000 newest = 3050 oldest = 2950
-                middle = round((current_page+self.end_page)/2)
+                middle = round((current_page + self.end_page) / 2)
                 self.start_page = current_page
-                yield scrapy.Request(self.url_stream.format((middle-1)*100) + "&x=1", callback=self.locate_start_page)
+                yield scrapy.Request(self.url_stream.format((middle - 1) * 100) + "&x=1",
+                                     callback=self.locate_start_page)
             if newest_date > self.from_time:
                 if oldest_date < self.from_time:
                     logging.info(f"Found start page: {current_page}")
                     yield scrapy.Request(response.url + "&x=1", callback=self.parse)
                     # + "&x=1" is needed because scrapy won't request same page twice
                 else:
-                    middle = round((current_page+self.start_page)/2)
+                    middle = round((current_page + self.start_page) / 2)
                     self.end_page = current_page
                     yield scrapy.Request(self.url_stream.format((middle - 1) * 100) + "&x=1",
                                          callback=self.locate_start_page)
@@ -74,7 +76,7 @@ class CNBCSpider(scrapy.Spider):
 
         if current_page:
             if current_page > 1:
-                page = (current_page-2) * 100
+                page = (current_page - 2) * 100
                 yield scrapy.Request(
                     url=self.url_stream.format(page),
                     callback=self.parse)
@@ -113,6 +115,10 @@ class CNBCSpider(scrapy.Spider):
         }
 
 
+gmt_timezone = pytz.timezone("GMT")
+et_timezone = pytz.timezone("US/Eastern")
+
+
 class NYTSpider(scrapy.Spider):
     """Spider to scrape NYT articles.
 
@@ -132,8 +138,8 @@ class NYTSpider(scrapy.Spider):
 
     def __init__(self, from_time, until_time, api_key, **kwargs):
         self.api_key = api_key
-        self.from_time = from_time
-        self.until_time = until_time
+        self.from_time = gmt_timezone.localize(from_time).astimezone(et_timezone).timestamp()
+        self.until_time = gmt_timezone.localize(until_time).astimezone(et_timezone).timestamp()
         if time.time() - self.until_time <= 86400:
             self.recent = True
         else:
@@ -155,7 +161,8 @@ class NYTSpider(scrapy.Spider):
             yield scrapy.Request(url_api_historic.format(year_max, _month),
                                  callback=self.parse, meta={"api_point": "historic"})
         if self.recent:
-            url_api_recent = f"https://api.nytimes.com/svc/news/v3/content/all/world.json?api-key={self.api_key}&limit=500"
+            url_api_recent = f"https://api.nytimes.com/svc/news/v3/content/all/world.json?api-key={self.api_key}" \
+                             f"&limit=500"
             yield scrapy.Request(url_api_recent, callback=self.parse, meta={"api_point": "recent"})
 
     def parse(self, response, **kwargs):
@@ -190,11 +197,12 @@ class NYTSpider(scrapy.Spider):
         author_name = response.css(".last-byline ::text").get()
         if author_name is not None:
             author_name = re.sub("[Bb]y.", "", author_name)
+        time_ = et_timezone.localize(response.meta["time"]).astimezone(gmt_timezone).timestamp()
         yield {
             "title": response.css("div h1 ::text").get(),
             "author_name": author_name,
             "body": content,
-            "time": response.meta["time"],
+            "time": time_,
             "url": response.url,
             "origin": "n",
         }

@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '0.1.4'
+VERSION = '0.1.5'
 DESCRIPTION = 'Scraping news articles'
 LONG_DESCRIPTION = 'A package that allows you to scrape news articles from various news sites via scrapy.'
 
@@ -14,7 +14,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description=LONG_DESCRIPTION,
     packages=find_packages(),
-    install_requires=['scrapy', 'ciso8601'],
+    install_requires=['scrapy', 'ciso8601', 'pytz'],
     keywords=['python', 'news', 'scraping', 'news scraping', 'news articles'],
     classifiers=[
         "Development Status :: 1 - Planning",

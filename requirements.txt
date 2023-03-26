@@ -1,3 +1,5 @@
 setuptools
 Scrapy
 ciso8601
+NewsArticlesScraper
+pytz

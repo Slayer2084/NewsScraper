@@ -24,13 +24,15 @@ class CNBCSpider(scrapy.Spider):
         'REQUEST_FINGERPRINTER_IMPLEMENTATION': '2.7',
     }
 
-    def __init__(self, from_time: datetime.datetime, until_time: datetime.datetime, **kwargs):
+    def __init__(self, from_time: datetime.datetime, until_time: datetime.datetime, user_agent=None, **kwargs):
         self.url_stream = "https://api.queryly.com/cnbc/json.aspx?queryly_key=31a35d40a9a64ab3&query=cnbc&endindex={" \
                           "}&batchsize=100&timezoneoffset=-60&sort=date"
         self.from_time = from_time
         self.until_time = until_time
         self.start_page = None
         self.end_page = None
+        if user_agent is not None:
+            self.custom_settings["USER_AGENT"] = user_agent
         super().__init__(**kwargs)
 
     def start_requests(self):
@@ -131,7 +133,7 @@ class NYTSpider(scrapy.Spider):
         'DOWNLOAD_TIMEOUT': 300,
     }
 
-    def __init__(self, from_time: datetime.datetime, until_time: datetime.datetime, api_key, **kwargs):
+    def __init__(self, from_time: datetime.datetime, until_time: datetime.datetime, api_key, user_agent=None, **kwargs):
         self.api_key = api_key
         self.from_time = from_time
         self.until_time = until_time
@@ -139,6 +141,8 @@ class NYTSpider(scrapy.Spider):
             self.recent = True
         else:
             self.recent = False
+        if user_agent is not None:
+            self.custom_settings["USER_AGENT"] = user_agent
         super().__init__(**kwargs)
 
     def start_requests(self):

@@ -22,6 +22,11 @@ class CNBCSpider(scrapy.Spider):
         'DOWNLOAD_DELAY': 0.5,
         # 'JOBDIR': './News/CNBCJobs',
         'REQUEST_FINGERPRINTER_IMPLEMENTATION': '2.7',
+        'DOWNLOADER_MIDDLEWARES': {
+            'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+            'scrapy_user_agents.middlewares.RandomUserAgentMiddleware': 400,
+        },
+        'RANDOM_UA_TYPE': "random",
     }
 
     def __init__(self, from_time: datetime.datetime, until_time: datetime.datetime, user_agent=None, **kwargs):
@@ -131,6 +136,11 @@ class NYTSpider(scrapy.Spider):
         # 'JOBDIR': './News/NYTJobs',
         'REQUEST_FINGERPRINTER_IMPLEMENTATION': '2.7',
         'DOWNLOAD_TIMEOUT': 300,
+        'DOWNLOADER_MIDDLEWARES': {
+            'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+            'scrapy_user_agents.middlewares.RandomUserAgentMiddleware': 400,
+        },
+        'RANDOM_UA_TYPE': "random",
     }
 
     def __init__(self, from_time: datetime.datetime, until_time: datetime.datetime, api_key, user_agent=None, **kwargs):

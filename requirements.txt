@@ -3,3 +3,4 @@ Scrapy
 ciso8601
 NewsArticlesScraper
 pytz
+scrapy-user-agents

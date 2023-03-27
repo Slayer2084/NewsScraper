@@ -14,7 +14,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description=LONG_DESCRIPTION,
     packages=find_packages(),
-    install_requires=['scrapy', 'ciso8601', 'pytz'],
+    install_requires=['scrapy', 'ciso8601', 'pytz', "scrapy-user-agents"],
     keywords=['python', 'news', 'scraping', 'news scraping', 'news articles'],
     classifiers=[
         "Development Status :: 1 - Planning",

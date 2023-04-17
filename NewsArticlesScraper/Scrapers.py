@@ -299,5 +299,5 @@ class TheGuardianSpider(scrapy.Spider):
             "body": body,
             "time": response.meta["time"],
             "url": response.url,
-            "origin": "g",
+            "origin": "g"
         }

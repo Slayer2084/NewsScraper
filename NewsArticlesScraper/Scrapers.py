@@ -237,11 +237,13 @@ class TheGuardianSpider(scrapy.Spider):
         'RANDOM_UA_TYPE': "random",
     }
 
-    def __init__(self, from_time: datetime.datetime, until_time: datetime.datetime, api_key="test", user_agent=None, **kwargs):
+    def __init__(self, from_time: datetime.datetime, until_time: datetime.datetime, api_key="test", user_agent=None,
+                 **kwargs):
         self.api_key = api_key
         self.from_time = from_time
         self.until_time = until_time
-        self.url = f"https://content.guardianapis.com/world?api-key=test&page-size=200&use-date=first-publication" \
+        self.url = f"https://content.guardianapis.com/world?api-key={self.api_key}" \
+                   f"&page-size=200&use-date=first-publication" \
                    f"&from-date={self.from_time.strftime('%Y-%m-%d')}" \
                    f"&to-date={self.until_time.strftime('%Y-%m-%d')}&page="
         if user_agent is not None:

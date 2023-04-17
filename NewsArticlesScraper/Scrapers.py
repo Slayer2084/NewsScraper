@@ -213,3 +213,89 @@ class NYTSpider(scrapy.Spider):
             "url": response.url,
             "origin": "n",
         }
+
+
+class TheGuardianSpider(scrapy.Spider):
+    """Spider to scrape The Guardian articles.
+
+    """
+    name = 'TheGuardian'
+    allowed_domains = ['theguardian.com', 'content.guardianapis.com']
+    custom_settings = {
+        'LOG_LEVEL': 'WARN',
+        'USER_AGENT': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 '
+                      'Safari/537.1',
+        'ROBOTSTXT_OBEY': False,
+        'DOWNLOAD_DELAY': 1,
+        # 'JOBDIR': './News/TheGuardianJobs',
+        'REQUEST_FINGERPRINTER_IMPLEMENTATION': '2.7',
+        'DOWNLOAD_TIMEOUT': 300,
+        'DOWNLOADER_MIDDLEWARES': {
+            'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+            'scrapy_user_agents.middlewares.RandomUserAgentMiddleware': 400,
+        },
+        'RANDOM_UA_TYPE': "random",
+    }
+
+    def __init__(self, from_time: datetime.datetime, until_time: datetime.datetime, api_key="test", user_agent=None, **kwargs):
+        self.api_key = api_key
+        self.from_time = from_time
+        self.until_time = until_time
+        self.url = f"https://content.guardianapis.com/world?api-key=test&page-size=200&use-date=first-publication" \
+                   f"&from-date={self.from_time.strftime('%Y-%m-%d')}" \
+                   f"&to-date={self.until_time.strftime('%Y-%m-%d')}&page="
+        if user_agent is not None:
+            self.custom_settings["USER_AGENT"] = user_agent
+        super().__init__(**kwargs)
+
+    def start_requests(self):
+        yield scrapy.Request(self.url + "1",
+                             callback=self.paginate)
+
+    def paginate(self, response):
+        data = response.json()["response"]
+        max_pages = data["pages"]
+        for page_number in range(1, max_pages + 1):
+            to_request_url = self.url + str(page_number) + "&x=1"
+            yield scrapy.Request(to_request_url, callback=self.parse_api)
+
+    def parse_api(self, response):
+        data = response.json()["response"]
+        articles = data["results"]
+        for article in articles:
+            yield scrapy.Request(url=article["webUrl"], callback=self.parse_article,
+                                 meta={"time": article["webPublicationDate"]})
+
+    @staticmethod
+    def parse_article(response):
+        title = response.css(".dcr-y70mar ::text").get()
+        if title is None:
+            title = response.css(".dcr-1kwg2vo ::text").get()
+        if title is None:
+            title = response.css(".dcr-18ogzt ::text").get()
+        if title is None:
+            title = response.css(".dcr-1ttbui0 ::text").get()
+        if title is None:
+            title = response.css(".dcr-1b0zxa5 ::text").get()
+        if title is None:
+            title = response.css(".dcr-1xaevyx ::text").get()
+        if title is None:
+            title = ""
+
+        author_name = response.css(".dcr-ub3a78 ::text").get()
+        if author_name is None:
+            author_name = response.css(".dcr-8gsycy a ::text").get()
+        if author_name is None:
+            author_name = ""
+
+        body = " ".join(response.css(".dcr-n6w1lc ::text").getall())
+        if body == "":
+            body = " ".join(response.css("#maincontent p ::text").getall())
+        yield {
+            "title": title,
+            "author_name": author_name,
+            "body": body,
+            "time": response.meta["time"],
+            "url": response.url,
+            "origin": "g",
+        }

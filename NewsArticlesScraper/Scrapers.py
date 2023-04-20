@@ -102,8 +102,11 @@ class CNBCSpider(scrapy.Spider):
                         if result["cn:type"] not in ["cnbcvideo", "live_story"]:
                             yield scrapy.Request(result["cn:liveURL"], callback=self.parse_article, meta={"time": t})
 
+    def parse_article(self, response):
+        yield self.parse_article_func(response, meta=response.meta)
+
     @staticmethod
-    def parse_article(response):
+    def parse_article_func(response, meta):
         content = "".join(response.css(".ArticleBody-subtitle , .group p").css("::text").getall())
         title = response.css(".ArticleHeader-headline ::text").get()
         if title is None:
@@ -111,11 +114,11 @@ class CNBCSpider(scrapy.Spider):
         author = response.css(".Author-authorName ::text").get()
         if author is None:
             author = response.css(".source > a ::text").get()
-        yield {
+        return {
             "title": title,
             "author_name": author,
             "body": content,
-            "time": response.meta["time"],
+            "time": meta["time"],
             "url": response.url,
             "origin": "c",
         }
@@ -199,17 +202,31 @@ class NYTSpider(scrapy.Spider):
                     url = article["url"]
             yield scrapy.Request(url=url, callback=self.parse_article, meta={"time": pub_date})
 
+    def parse_article(self, response):
+        yield self.parse_article_func(response, meta=response.meta)
+
     @staticmethod
-    def parse_article(response):
-        content = "".join(response.css(".StoryBodyCompanionColumn > div > p ::text").getall())
+    def parse_article_func(response, meta):
+        title = response.css("div h1 ::text").get()
+        if title is None:
+            title = ""
         author_name = response.css(".last-byline ::text").get()
+        if author_name is None:
+            author_name = response.css(".e1jsehar0 ::text").get()
         if author_name is not None:
             author_name = re.sub("[Bb]y.", "", author_name)
-        yield {
-            "title": response.css("div h1 ::text").get(),
+        else:
+            author_name = ""
+        content = "".join(response.css(".StoryBodyCompanionColumn > div > p ::text").getall())
+        if content == "":
+            content = "".join(response.css(".g-caption ::text").getall())
+        if content == "":
+            content = "".join(response.css(".g-body ::text").getall())
+        return {
+            "title": title,
             "author_name": author_name,
             "body": content,
-            "time": response.meta["time"],
+            "time": meta["time"],
             "url": response.url,
             "origin": "n",
         }
@@ -268,8 +285,11 @@ class TheGuardianSpider(scrapy.Spider):
             yield scrapy.Request(url=article["webUrl"], callback=self.parse_article,
                                  meta={"time": article["webPublicationDate"]})
 
+    def parse_article(self, response):
+        yield self.parse_article_func(response, response.meta)
+
     @staticmethod
-    def parse_article(response):
+    def parse_article_func(response, meta):
         title = response.css(".dcr-y70mar ::text").get()
         if title is None:
             title = response.css(".dcr-1kwg2vo ::text").get()
@@ -293,11 +313,16 @@ class TheGuardianSpider(scrapy.Spider):
         body = " ".join(response.css(".dcr-n6w1lc ::text").getall())
         if body == "":
             body = " ".join(response.css("#maincontent p ::text").getall())
-        yield {
+        return {
             "title": title,
             "author_name": author_name,
             "body": body,
-            "time": response.meta["time"],
+            "time": meta["time"],
             "url": response.url,
             "origin": "g"
         }
+
+
+parse_cnbc = CNBCSpider.parse_article_func
+parse_nyt = NYTSpider.parse_article_func
+parse_guardian = TheGuardianSpider.parse_article_func

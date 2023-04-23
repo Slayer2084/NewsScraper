@@ -243,7 +243,7 @@ class TheGuardianSpider(scrapy.Spider):
         'USER_AGENT': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 '
                       'Safari/537.1',
         'ROBOTSTXT_OBEY': False,
-        'DOWNLOAD_DELAY': 1,
+        'DOWNLOAD_DELAY': 6,
         # 'JOBDIR': './News/TheGuardianJobs',
         'REQUEST_FINGERPRINTER_IMPLEMENTATION': '2.7',
         'DOWNLOAD_TIMEOUT': 300,
@@ -283,7 +283,7 @@ class TheGuardianSpider(scrapy.Spider):
         articles = data["results"]
         for article in articles:
             yield scrapy.Request(url=article["webUrl"], callback=self.parse_article,
-                                 meta={"time": article["webPublicationDate"]})
+                                 meta={"time": ciso8601.parse_datetime(article["webPublicationDate"])})
 
     def parse_article(self, response):
         yield self.parse_article_func(response, response.meta)

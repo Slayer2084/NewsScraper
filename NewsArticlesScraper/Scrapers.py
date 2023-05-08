@@ -27,6 +27,8 @@ class CNBCSpider(scrapy.Spider):
             'scrapy_user_agents.middlewares.RandomUserAgentMiddleware': 400,
         },
         'RANDOM_UA_TYPE': "random",
+        'RETRY_ENABLED': True,
+        'RETRY_TIMES': 5,
     }
 
     def __init__(self, from_time: datetime.datetime, until_time: datetime.datetime, user_agent=None, **kwargs):
@@ -144,6 +146,8 @@ class NYTSpider(scrapy.Spider):
             'scrapy_user_agents.middlewares.RandomUserAgentMiddleware': 400,
         },
         'RANDOM_UA_TYPE': "random",
+        'RETRY_ENABLED': True,
+        'RETRY_TIMES': 5,
     }
 
     def __init__(self, from_time: datetime.datetime, until_time: datetime.datetime, api_key, user_agent=None, **kwargs):
@@ -252,6 +256,8 @@ class TheGuardianSpider(scrapy.Spider):
             'scrapy_user_agents.middlewares.RandomUserAgentMiddleware': 400,
         },
         'RANDOM_UA_TYPE': "random",
+        'RETRY_ENABLED': True,
+        'RETRY_TIMES': 5,
     }
 
     def __init__(self, from_time: datetime.datetime, until_time: datetime.datetime, api_key="test", user_agent=None,

@@ -31,9 +31,11 @@ class CNBCSpider(scrapy.Spider):
         'RETRY_TIMES': 5,
     }
 
-    def __init__(self, from_time: datetime.datetime, until_time: datetime.datetime, user_agent=None, **kwargs):
-        self.url_stream = "https://api.queryly.com/cnbc/json.aspx?queryly_key=31a35d40a9a64ab3&query=cnbc&endindex={" \
-                          "}&batchsize=100&timezoneoffset=-60&sort=date"
+    def __init__(self, from_time: datetime.datetime, until_time: datetime.datetime, user_agent=None,
+                 query: str = "cnbc", **kwargs):
+        self.url_stream = "https://api.queryly.com/cnbc/json.aspx?queryly_key=31a35d40a9a64ab3&query=" + \
+                          query + "&endindex={" \
+                                  "}&batchsize=100&timezoneoffset=-60&sort=date"
         self.from_time = from_time
         self.until_time = until_time
         self.start_page = None
@@ -150,7 +152,8 @@ class NYTSpider(scrapy.Spider):
         'RETRY_TIMES': 5,
     }
 
-    def __init__(self, from_time: datetime.datetime, until_time: datetime.datetime, api_key, user_agent=None, **kwargs):
+    def __init__(self, from_time: datetime.datetime, until_time: datetime.datetime, api_key, user_agent=None,
+                 subsections_to_include: list = None, **kwargs):
         self.api_key = api_key
         self.from_time = from_time
         self.until_time = until_time
@@ -160,6 +163,7 @@ class NYTSpider(scrapy.Spider):
             self.recent = False
         if user_agent is not None:
             self.custom_settings["USER_AGENT"] = user_agent
+        self.subsections_to_include = subsections_to_include
         super().__init__(**kwargs)
 
     def start_requests(self):
@@ -188,6 +192,12 @@ class NYTSpider(scrapy.Spider):
         else:
             articles = data["results"]
         for article in articles:
+            if api_point == "historic" and self.subsections_to_include is not None:
+                if article["subsection_name"] not in self.subsections_to_include:
+                    continue
+            if api_point == "recent" and self.subsections_to_include is not None:
+                if article["section"] not in self.subsections_to_include:
+                    continue
             if api_point == "historic":
                 pub_date = article["pub_date"]
             else:

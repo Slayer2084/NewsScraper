@@ -193,7 +193,10 @@ class NYTSpider(scrapy.Spider):
             articles = data["results"]
         for article in articles:
             if api_point == "historic" and self.subsections_to_include is not None:
-                if article["subsection_name"] not in self.subsections_to_include:
+                subsection = article.get("subsection_name", None)
+                if subsection is None:
+                    continue
+                if subsection not in self.subsections_to_include:
                     continue
             if api_point == "recent" and self.subsections_to_include is not None:
                 if article["section"] not in self.subsections_to_include:

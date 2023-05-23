@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = '0.2.5'
+VERSION = '0.2.6'
 DESCRIPTION = 'Scraping news articles'
 LONG_DESCRIPTION = 'A package that allows you to scrape news articles from various news sites via scrapy.'
 

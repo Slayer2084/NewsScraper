@@ -102,7 +102,9 @@ class CnbcUrlSpider(scrapy.Spider):
                 if not premium:
                     if result["cn:branding"] == "cnbc":
                         if result["cn:type"] not in ["cnbcvideo", "live_story"]:
-                            yield {"url": result["cn:liveURL"], "time": t}
+                            yield {"url": result["cn:liveURL"],
+                                   "time": t,
+                                   "origin": "c"}
 
 
 class NytUrlSpider(scrapy.Spider):
@@ -194,7 +196,9 @@ class NytUrlSpider(scrapy.Spider):
                     url = article["related_urls"][0]["url"]
                 except (TypeError, IndexError):
                     url = article["url"]
-            yield {"url": url, "time": pub_date}
+            yield {"url": url,
+                   "time": pub_date,
+                   "origin": "n"}
 
 
 class TheGuardianSpider(scrapy.Spider):
@@ -250,4 +254,6 @@ class TheGuardianSpider(scrapy.Spider):
         data = response.json()["response"]
         articles = data["results"]
         for article in articles:
-            yield {"url": article["webUrl"], "time": ciso8601.parse_datetime(article["webPublicationDate"])}
+            yield {"url": article["webUrl"],
+                   "time": ciso8601.parse_datetime(article["webPublicationDate"]),
+                   "origin": "g"}

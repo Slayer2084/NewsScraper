@@ -121,7 +121,7 @@ class NytUrlSpider(scrapy.Spider):
         'DOWNLOAD_DELAY': 12,
         # 'JOBDIR': './News/NYTJobs',
         'REQUEST_FINGERPRINTER_IMPLEMENTATION': '2.7',
-        'DOWNLOAD_TIMEOUT': 300,
+        'DOWNLOAD_TIMEOUT': 1200,
         'DOWNLOADER_MIDDLEWARES': {
             'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
             'scrapy_user_agents.middlewares.RandomUserAgentMiddleware': 400,

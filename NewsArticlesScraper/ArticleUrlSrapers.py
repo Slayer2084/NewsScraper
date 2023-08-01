@@ -129,7 +129,7 @@ class NytUrlSpider(scrapy.Spider):
         },
         'RANDOM_UA_TYPE': "random",
         'RETRY_ENABLED': True,
-        'RETRY_TIMES': 5,
+        'RETRY_TIMES': 10,
     }
 
     def __init__(self, from_time: datetime.datetime, until_time: datetime.datetime, api_key, user_agent=None,

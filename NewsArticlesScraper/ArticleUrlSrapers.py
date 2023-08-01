@@ -24,6 +24,7 @@ class CnbcUrlSpider(scrapy.Spider):
             'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
             'scrapy_user_agents.middlewares.RandomUserAgentMiddleware': 400,
         },
+        'DOWNLOAD_DELAY': 0.5,
         'RANDOM_UA_TYPE': "random",
         'RETRY_ENABLED': True,
         'RETRY_TIMES': 5,

@@ -342,6 +342,6 @@ class TheGuardianSpider(scrapy.Spider):
         }
 
 
-parse_cnbc = CNBCSpider.parse_article_func
-parse_nyt = NYTSpider.parse_article_func
-parse_guardian = TheGuardianSpider.parse_article_func
+parsers = {"c": CNBCSpider.parse_article_func,
+           "n": NYTSpider.parse_article_func,
+           "g": TheGuardianSpider.parse_article_func}

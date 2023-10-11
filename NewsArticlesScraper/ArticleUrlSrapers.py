@@ -149,10 +149,15 @@ class NytUrlSpider(scrapy.Spider):
     def start_requests(self):
         url_api_historic = "https://api.nytimes.com/svc/archive/v1/{}/{}.json?api-key=" + self.api_key
         year_min = int(self.from_time.strftime('%Y'))
+        month_min = int(self.from_time.strftime('%m'))
         year_max = int(self.until_time.strftime('%Y'))
         month_max = int(self.until_time.strftime('%m'))
 
-        for year in range(year_min, year_max):
+        for month in range(month_min, 13):
+            yield scrapy.Request(url_api_historic.format(year_min, month),
+                                 callback=self.parse, meta={"api_point": "historic"})
+
+        for year in range(year_min + 1, year_max):
             for month in range(1, 13):
                 yield scrapy.Request(url_api_historic.format(year, month),
                                      callback=self.parse, meta={"api_point": "historic"})
